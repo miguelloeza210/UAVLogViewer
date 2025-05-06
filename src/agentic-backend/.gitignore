@@ -1,0 +1,28 @@
+# Virtual Environment
+venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Environment variables file
+.env
+
+# Temporary runtime files
+temp_logs/
+
+# IDE / Editor directories
+.vscode/
+.idea/
+
+# OS generated files
+.DS_Store
+Thumbs.db

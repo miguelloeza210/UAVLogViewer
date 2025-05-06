@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./agentic-backend
+    image: flask-backend
+    container_name: flask-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_RUN_HOST: "0.0.0.0"
+      FLASK_RUN_PORT: "5000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: vue-frontend
+    container_name: vue-frontend
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: "http://localhost:5000"
