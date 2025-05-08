@@ -31,5 +31,5 @@ echo "VUE_APP_API_URL=http://backend:8000" >> .env
 # Build Docker Image
 docker-compose up --build
 
-Navigate to (localhost:8080) in your web browser
+Navigate to [localhost](localhost:8080) in your web browser
 ```
