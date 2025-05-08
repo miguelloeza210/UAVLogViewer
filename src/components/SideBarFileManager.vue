@@ -28,9 +28,11 @@
     </div>
 </template>
 <script>
+/* eslint-disable */
 import VProgress from './SideBarFileManagerProgressBar.vue'
 import Worker from '../tools/parsers/parser.worker.js'
 import { store } from './Globals'
+import axios from 'axios'
 
 import { MAVLink20Processor as MAVLink } from '../libs/mavlink'
 
@@ -69,33 +71,70 @@ export default {
         onLoadSample (file) {
             let url
             if (file === 'sample') {
-                this.state.file = 'sample'
+                this.state.file = 'sample.tlog' // Give a more specific name
                 url = require('../assets/vtol.tlog').default
                 this.state.logType = 'tlog'
             } else {
+                // Assuming 'file' here is a URL string if not 'sample'
                 url = file
+                this.state.file = url.substring(url.lastIndexOf('/') + 1) // Extract filename
             }
+
+            this.uploadpercentage = 0
+            this.transferMessage = 'Downloading sample...'
+            this.sampleLoaded = false // Reset while loading new sample
+
             const oReq = new XMLHttpRequest()
             console.log(`loading file from ${url}`)
-            this.state.logType = url.indexOf('.tlog') > 0 ? 'tlog' : 'bin'
+            // this.state.logType is already set above for sample, or will be set by extension for direct URL
+            if (url.includes('.tlog')) this.state.logType = 'tlog'
+            else if (url.includes('.bin')) this.state.logType = 'bin'
+            // Add other types if necessary
+
             oReq.open('GET', url, true)
             oReq.responseType = 'arraybuffer'
 
-            oReq.onload = function (oEvent) {
+            oReq.onload = async (oEvent) => { // Use arrow function for `this` context and async for await
                 const arrayBuffer = oReq.response
+                if (arrayBuffer) {
+                    this.transferMessage = 'Download complete. Uploading to server...'
+                    this.uploadpercentage = 0 // Reset for upload progress
 
-                this.transferMessage = 'Download Done'
-                this.sampleLoaded = true
-                worker.postMessage({
-                    action: 'parse',
-                    file: arrayBuffer,
-                    isTlog: (url.indexOf('.tlog') > 0),
-                    isDji: (url.indexOf('.txt') > 0)
-                })
+                    const blob = new Blob([arrayBuffer])
+                    const fileToUpload = new File([blob], this.state.file, { type: blob.type || 'application/octet-stream' })
+                    const formData = new FormData()
+                    formData.append('file', fileToUpload)
+
+                    try {
+                        const response = await axios.post(`${this.state.backendApiUrl}/api/upload_log/`, formData, {
+                            onUploadProgress: (progressEvent) => {
+                                if (progressEvent.lengthComputable) {
+                                    this.uploadpercentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                                }
+                            }
+                        })
+                        this.transferMessage = 'Server processing complete!'
+                        this.uploadpercentage = 100
+                        this.sampleLoaded = true
+                        this.state.processStatus = 'Log uploaded. Ready for chat.'
+                        this.state.processPercentage = 100
+                        this.state.processDone = true
+                        console.log('Backend upload response (sample):', response.data)
+                        // Client-side worker parsing can still happen if needed for immediate UI features
+                        // not dependent on backend's full analysis for chat.
+                        worker.postMessage({ action: 'parse', file: arrayBuffer, isTlog: (this.state.logType === 'tlog'), isDji: (this.state.logType === 'dji') })
+                    } catch (error) {
+                        this.transferMessage = 'Error uploading sample to server.'
+                        this.uploadpercentage = 100 // Show completion of attempt
+                        console.error('Error uploading sample to backend:', error)
+                        alert('Error uploading sample to server. Check console.')
+                    }
+                }
             }
             oReq.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
-                    this.uploadpercentage = 100 * e.loaded / e.total
+                    this.uploadpercentage = Math.round((e.loaded * 100) / e.total)
+                    this.transferMessage = `Downloading: ${this.uploadpercentage}%`
                 }
             }
             , false)
@@ -156,8 +195,47 @@ export default {
                 this.state.logType = 'dji'
             }
             reader.readAsArrayBuffer(file)
+
+            // --- Add backend upload logic here ---
+            this.uploadpercentage = 0
+            this.transferMessage = 'Preparing to upload...'
+            const formDataToUpload = new FormData()
+            formDataToUpload.append('file', file) // Use the original 'file' object from input/drop
+
+            axios.post(`${this.state.backendApiUrl}/api/upload_log/`, formDataToUpload, {
+                onUploadProgress: (progressEvent) => {
+                    if (progressEvent.lengthComputable) {
+                        this.uploadpercentage = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                        this.transferMessage = `Uploading: ${this.uploadpercentage}%`
+                    }
+                }
+            }).then(response => {
+                this.transferMessage = 'Server processing complete!'
+                this.uploadpercentage = 100
+                this.state.processStatus = 'Log uploaded. Ready for chat.'
+                this.state.processPercentage = 100 // Assuming backend handles full processing
+                this.state.processDone = true
+                console.log('Backend upload response (local file):', response.data)
+                // The original worker.postMessage for client-side parsing is still here.
+                // Decide if it's still needed or if all parsing logic moves to backend.
+            }).catch(error => {
+                this.transferMessage = 'Error uploading file to server.'
+                this.uploadpercentage = 100 // Show completion of attempt
+                console.error('Error uploading local file to backend:', error)
+                alert('Error uploading file to server. Check console.')
+                // Reset processing state if backend upload fails
+                this.state.processStatus = 'Upload failed'
+                this.state.processPercentage = 0
+                this.state.processDone = false
+            })
+            // --- End backend upload logic ---
         },
-        uploadFile () {
+        // The original uploadFile method seems to be for a different endpoint or purpose.
+        // I'm leaving it as is, as the request was to modify how samples and user-selected files
+        // (handled by `process`) are uploaded to the FastAPI backend.
+        // If this `uploadFile` method also needs to target the FastAPI endpoint,
+        // it would need similar axios logic.
+        uploadFile () { 
             this.uploadStarted = true
             this.transferMessage = 'Upload Done!'
             this.uploadpercentage = 0

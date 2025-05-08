@@ -64,5 +64,10 @@ export const store = {
     commit: _COMMIT_.slice(0, 6),
     /* global _BUILDDATE_ */
     buildDate: _BUILDDATE_,
-    childPlots: []
+    childPlots: [],
+    // Chat State
+    chatHistory: [], // Array of { sender: 'user' | 'bot', text: string }
+    chatLoading: false,
+    chatInput: '',
+    backendApiUrl: process.env.VUE_APP_API_URL || 'http://localhost:8000'
 }

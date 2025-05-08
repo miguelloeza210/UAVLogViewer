@@ -5,8 +5,7 @@
   "author": "Willian Galvani <williangalvani@gmail.com>",
   "private": true,
   "scripts": {
-    "dev": "node --max_old_space_size=4096 node_modules/webpack-dev-server/bin/webpack-dev-server.js --host 0.0.0.0 --progress --config build/webpack.dev.conf.js",
-    "start": "npm run dev",
+    "dev": "webpack serve --host 0.0.0.0 --progress --config build/webpack.dev.conf.js",
     "unit": "jest --config test/unit/jest.conf.js --coverage",
     "e2e": "node test/e2e/runner.js",
     "test": "npm run unit && npm run e2e",
@@ -20,6 +19,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/vue-fontawesome": "^2.0.10",
     "assert": "^2.0.0",
+    "axios": "^1.9.0",
     "bootstrap-vue": "^2.22.0",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",

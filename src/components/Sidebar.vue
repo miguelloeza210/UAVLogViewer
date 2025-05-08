@@ -32,6 +32,35 @@
                     <plotSetup/>
                     <message-menu/>
                 </div>
+                <!-- Chat Section within "other" tab -->
+                <div v-if="selected==='other' && state.processDone">
+                    <hr>
+                    <a class="centered-section">Chat with Log Data</a>
+                    <div class="card mt-2 mx-2"> <!-- Added mx-2 for some horizontal margin -->
+                        <!-- <div class="card-header">Chat with Log Data</div> remove if redundant -->
+                        <div class="card-body">
+                            <div class="chat-history mb-2" ref="chatHistoryContainer">
+                                <div v-for="(msg, index) in state.chatHistory" :key="index"
+                                    :class="['message-bubble', msg.sender]">
+                                    <strong>{{ msg.sender === 'user' ? 'You' : 'Bot' }}: </strong>
+                                    <span>{{ msg.text }}</span>
+                                </div>
+                                <div v-if="state.chatLoading" class="message-bubble bot">
+                                    <span>Thinking...</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Ask..."
+                                    v-model="state.chatInput" @keydown.enter="sendMessage"
+                                    :disabled="!state.processDone || state.chatLoading">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary btn-sm" type="button" @click="sendMessage"
+                                        :disabled="!state.processDone || state.chatLoading">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div v-if="selected==='home'">
                     <Dropzone/>
                     <span class="buildinfo">Commit {{state.commit}}</span>
@@ -133,6 +162,7 @@ import Dropzone from './SideBarFileManager.vue'
 import MessageMenu from './SideBarMessageMenu.vue'
 import {store} from './Globals.js'
 import PlotSetup from './PlotSetup.vue'
+import axios from 'axios' // Import axios
 
 export default {
     name: 'sidebar',
@@ -154,6 +184,40 @@ export default {
             this.selected = selected
         },
 
+        async sendMessage () {
+            const userMessage = this.state.chatInput.trim()
+            if (!userMessage || this.state.chatLoading || !this.state.processDone) return
+
+            this.state.chatHistory.push({ sender: 'user', text: userMessage })
+            this.state.chatInput = '' // Clear input
+            this.state.chatLoading = true
+            this.$nextTick(() => { this.scrollToChatBottom() })
+
+            try {
+                const apiUrl = `${this.state.backendApiUrl}/api/chat/` // Use URL from store
+                console.log(`Sending message to: ${apiUrl}`)
+
+                const response = await axios.post(apiUrl, { message: userMessage })
+
+                if (response.data && response.data.response) {
+                    this.state.chatHistory.push({ sender: 'bot', text: response.data.response })
+                } else {
+                    this.state.chatHistory.push({ sender: 'bot', text: 'Sorry, I received an unexpected response.' })
+                }
+            } catch (error) {
+                const errorMessage = error.response?.data?.detail || 'Sorry, I encountered an error. Please try again.'
+                this.state.chatHistory.push({ sender: 'bot', text: errorMessage })
+            } finally {
+                this.state.chatLoading = false
+                this.$nextTick(() => { this.scrollToChatBottom() })
+            }
+        },
+        scrollToChatBottom () {
+            const container = this.$refs.chatHistoryContainer
+            if (container) {
+                container.scrollTop = container.scrollHeight
+            }
+        },
         startCapture (displayMediaOptions) {
             navigator.mediaDevices.getDisplayMedia({video: { mediaSource: 'screen' }})
                 .then((stream) => {
@@ -234,6 +298,44 @@ export default {
        a {
         padding: 2px 60px 2px 55px !important;
        }
+    }
+
+/* Chat Styles from Home.vue, adapted for Sidebar */
+.chat-history {
+    height: 350px; /* Adjust height as needed for sidebar */
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+    background-color: #f8f9fa; /* Light background for chat history */
+    color: #212529; /* Darker text for readability */
+}
+
+.message-bubble {
+    margin-bottom: 5px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    max-width: 90%; /* Adjusted for potentially narrower sidebar */
+    word-wrap: break-word;
+}
+
+.message-bubble.user {
+    background-color: #cfe2ff; /* Light blue for user */
+    margin-left: auto;
+    text-align: right; /* Ensure text aligns right for user */
+}
+
+.message-bubble.bot {
+    background-color: #e9ecef; /* Light grey for bot */
+    margin-right: auto;
+    text-align: left; /* Ensure text aligns left for bot */
+}
+
+/* Ensure input group buttons are appropriately sized */
+.input-group .btn-sm {
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
     }
 </style>
 

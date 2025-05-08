@@ -1,10 +1,11 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware 
 from server.chatbot_backend import chatbot_router
 import structlog
 import logging
 import sys
 
-# Configure structlog globally for the application
+
 structlog.configure(
     processors=[
         structlog.contextvars.merge_contextvars,
@@ -27,13 +28,22 @@ app = FastAPI(
     description="API for uploading UAV logs and chatting about them using an LLM.",
     version="0.1.0",
 )
+# CORS
+origins = [
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  
+    allow_headers=["*"], 
+)
+
 
 app.include_router(chatbot_router)
 
-
-# --- Uvicorn Runner (for local development) ---
-# This allows running the script directly `python main.py`
-# However, using `uvicorn main:app --reload` is generally preferred for development.
 if __name__ == "__main__":
     import uvicorn
     logger.info("uvicorn_startup_direct", host="0.0.0.0", port=8000, reload=True)

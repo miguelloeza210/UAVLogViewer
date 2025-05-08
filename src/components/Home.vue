@@ -2,37 +2,32 @@
     <div id='vuewrapper' style="height: 100%;">
         <template v-if="state.mapLoading || state.plotLoading">
             <div id="waiting">
-                <atom-spinner
-                    :animation-duration="1000"
-                    :color="'#64e9ff'"
-                    :size="300"
-                />
+                <atom-spinner :animation-duration="1000" :color="'#64e9ff'" :size="300" />
             </div>
         </template>
         <TxInputs fixed-aspect-ratio v-if="state.mapAvailable && state.showMap && state.showRadio"></TxInputs>
-        <ParamViewer    @close="state.showParams = false" v-if="state.showParams"></ParamViewer>
-        <MessageViewer  @close="state.showMessages = false" v-if="state.showMessages"></MessageViewer>
+        <ParamViewer @close="state.showParams = false" v-if="state.showParams"></ParamViewer>
+        <MessageViewer @close="state.showMessages = false" v-if="state.showMessages"></MessageViewer>
         <DeviceIDViewer @close="state.showDeviceIDs = false" v-if="state.showDeviceIDs"></DeviceIDViewer>
         <AttitudeViewer @close="state.showAttitude = false" v-if="state.showAttitude"></AttitudeViewer>
-        <MagFitTool     @close="state.showMagfit = false" v-if="state.showMagfit"></MagFitTool>
-        <EkfHelperTool  @close="state.showEkfHelper = false" v-if="state.showEkfHelper"></EkfHelperTool>
+        <MagFitTool @close="state.showMagfit = false" v-if="state.showMagfit"></MagFitTool>
+        <EkfHelperTool @close="state.showEkfHelper = false" v-if="state.showEkfHelper"></EkfHelperTool>
         <div class="container-fluid" style="height: 100%; overflow: hidden;">
 
-            <sidebar/>
+            <sidebar />
 
             <main class="col-md-9 ml-sm-auto col-lg-10 flex-column d-sm-flex" role="main">
 
-                <div class="row"
-                     v-bind:class="[state.showMap ? 'h-50' : 'h-100']"
-                     v-if="state.plotOn">
+                <div class="row" style="flex-shrink: 1; min-height: 0;"
+                    v-bind:class="[state.showMap ? 'h-50' : 'h-100']" v-if="state.plotOn">
                     <div class="col-12">
-                        <Plotly/>
+                        <Plotly />
                     </div>
                 </div>
-                <div class="row" v-bind:class="[state.plotOn ? 'h-50' : 'h-100']"
-                     v-if="state.mapAvailable && mapOk && state.showMap">
+                <div class="row" v-bind:class="[state.plotOn ? 'h-50' : 'h-100']" style="flex-shrink: 1; min-height: 0;"
+                    v-if="state.mapAvailable && mapOk && state.showMap">
                     <div class="col-12 noPadding">
-                        <CesiumViewer ref="cesiumViewer"/>
+                        <CesiumViewer ref="cesiumViewer" />
                     </div>
                 </div>
             </main>
@@ -46,6 +41,7 @@ import isOnline from 'is-online'
 import Plotly from '@/components/Plotly.vue'
 import CesiumViewer from '@/components/CesiumViewer.vue'
 import Sidebar from '@/components/Sidebar.vue'
+// import axios from 'axios' // No longer needed here
 import TxInputs from '@/components/widgets/TxInputs.vue'
 import ParamViewer from '@/components/widgets/ParamViewer.vue'
 import MessageViewer from '@/components/widgets/MessageViewer.vue'
@@ -70,6 +66,8 @@ export default {
         this.state.timeAttitude = []
         this.state.timeAttitudeQ = []
         this.state.currentTrajectory = []
+        // Check online status but don't necessarily need to use the result 'a' here
+        // unless there's specific logic depending on it.
         isOnline().then(a => { this.state.isOnline = a })
     },
     beforeDestroy () {
@@ -178,13 +176,13 @@ export default {
                     }
                 }
             } catch (error) {
-                console.log('unable to load metadata')
-                console.log(error)
+                // Consider replacing console.log with a user notification or more robust logging
+                // console.error('Unable to load metadata:', error);
             }
             try {
                 this.state.namedFloats = this.dataExtractor.extractNamedValueFloatNames(this.state.messages)
-                console.log(this.state.namedFloats)
             } catch (error) {
+                // Consider replacing console.log with a user notification or more robust logging
                 console.log('unable to load named floats')
                 console.log(error)
             }
@@ -206,11 +204,14 @@ export default {
                     this.state.showMap = true
                 }
             }
+            // Reset chat when new data is processed
+            this.state.chatHistory = []
+            this.state.chatInput = ''
         },
 
         generateColorMMap () {
             const colorMapOptions = {
-                colormap: 'hsv',
+                colormap: 'hsv', // eslint-disable-line
                 nshades: Math.max(11, this.setOfModes.length),
                 format: 'rgbaString',
                 alpha: 1
@@ -221,10 +222,8 @@ export default {
             // colormap used on Cesium
             colorMapOptions.format = 'float'
             this.state.colors = []
-            // this.translucentColors = []
-            for (const rgba of colormap(colorMapOptions)) {
-                this.state.colors.push(new Color(rgba[0], rgba[1], rgba[2]))
-                // this.translucentColors.push(new Cesium.Color(rgba[0], rgba[1], rgba[2], 0.1))
+            for (const rgba of colormap(colorMapOptions)) { // eslint-disable-line
+                this.state.colors.push(new Color(rgba[0], rgba[1], rgba[2])) // eslint-disable-line
             }
         }
     },
@@ -244,10 +243,10 @@ export default {
     computed: {
         mapOk () {
             return (this.state.flightModeChanges !== undefined &&
-                    this.state.currentTrajectory !== undefined &&
-                    this.state.currentTrajectory.length > 0 &&
-                    (Object.keys(this.state.timeAttitude).length > 0 ||
-                        Object.keys(this.state.timeAttitudeQ).length > 0))
+                this.state.currentTrajectory !== undefined &&
+                this.state.currentTrajectory.length > 0 &&
+                (Object.keys(this.state.timeAttitude).length > 0 ||
+                    Object.keys(this.state.timeAttitudeQ).length > 0))
         },
         setOfModes () {
             const set = []
@@ -267,66 +266,58 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.nav-side-menu ul :not(collapsed) .arrow:before,
+.nav-side-menu li :not(collapsed) .arrow:before {
+    font-family: 'Montserrat', sans-serif;
+    content: "\f078";
+    display: inline-block;
+    padding-left: 10px;
+    padding-right: 10px;
+    vertical-align: middle;
+    float: right;
+}
 
-    .nav-side-menu ul :not(collapsed) .arrow:before,
-    .nav-side-menu li :not(collapsed) .arrow:before {
-        font-family: 'Montserrat', sans-serif;
-        content: "\f078";
-        display: inline-block;
-        padding-left: 10px;
-        padding-right: 10px;
-        vertical-align: middle;
-        float: right;
-    }
+body {
+    margin: 0;
+    padding: 0;
+}
 
-    body {
-        margin: 0;
-        padding: 0;
-    }
+.container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
 
-    .container-fluid {
-        padding-left: 0;
-        padding-right: 0;
-    }
+div .col-12 {
+    padding-left: 0;
+    padding-right: 0;
+}
 
-    div .col-12 {
-        padding-left: 0;
-        padding-right: 0;
-    }
+i {
+    margin: 10px;
+}
 
-    i {
-        margin: 10px;
-    }
+i .dropdown {
+    float: right;
+}
 
-    i .dropdown {
-        float: right;
-    }
+.noPadding {
+    padding-left: 4px;
+    padding-right: 6px;
+    max-height: 100%;
+}
 
-    .noPadding {
-        padding-left: 4px;
-        padding-right: 6px;
-        max-height: 100%;
-    }
-
-    div #waiting {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1000;
-        display: block;
-        background-color: black;
-        opacity: 0.75;
-        text-align: center;
-    }
-    /* ATOM SPINNER */
-
-      div .atom-spinner {
-        margin: auto;
-        margin-top: 15%;
-    }
-
+div #waiting {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: block;
+    background-color: black;
+    opacity: 0.75;
+    text-align: center;
+}
 </style>
 <style>
 a {

@@ -9,3 +9,4 @@ class ChatResponse(BaseModel):
 class UploadResponse(BaseModel):
     message: str
     filename: str
+    log_id: str | None = None

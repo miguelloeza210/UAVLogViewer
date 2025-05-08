@@ -1,14 +1,15 @@
 services:
   backend:
-    build: ./agentic-backend
-    image: flask-backend
-    container_name: flask-backend
+    build: ./src/chatbot-backend
+    image: fastapi-backend
+    container_name: fastapi-backend
     restart: always
+    env_file:
+      - .env
     ports:
-      - "5000:5000"
-    environment:
-      FLASK_RUN_HOST: "0.0.0.0"
-      FLASK_RUN_PORT: "5000"
+      - "8000:8000"
+    volumes:
+      - ./src/chatbot-backend:/app
 
   frontend:
     build:
@@ -22,4 +23,12 @@ services:
     depends_on:
       - backend
     environment:
-      VITE_API_URL: "http://localhost:5000"
+      VITE_API_URL: "http://backend:8000"
+      HOST: "0.0.0.0"
+      PORT: "8080"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+    command: npm run dev

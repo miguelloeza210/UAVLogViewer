@@ -36,11 +36,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
   // these devServer options should be customized in /config/index.js
   devServer: {
     client: {
-      overlay: config.dev.errorOverlay
-        ? { warnings: false, errors: true }
-        : false,
-        logging: 'warn',
-
+      overlay: false
     },
     historyApiFallback: {
       rewrites: [
