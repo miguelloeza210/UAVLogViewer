@@ -19,6 +19,7 @@ This is an extension of the [UAVLogViewer](https://github.com/ArduPilot/UAVLogVi
 # Docker
 ```bash
 git clone https://github.com/miguelloeza210/UAVLogViewer.git
+git submodule update --init --recursive
 cd UAVLogViewer
 
 # Create a .env file in the root directory of the UAVLogViewer project 
