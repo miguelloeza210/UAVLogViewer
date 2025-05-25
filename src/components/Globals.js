@@ -69,5 +69,6 @@ export const store = {
     chatHistory: [], // Array of { sender: 'user' | 'bot', text: string }
     chatLoading: false,
     chatInput: '',
-    backendApiUrl: process.env.VUE_APP_API_URL || 'http://localhost:8000'
+    backendApiUrl: process.env.VUE_APP_API_URL || 'http://localhost:8000',
+    defaultAccessToken: process.env.VUE_APP_CESIUM_TOKEN || 'No Access Token Provided'
 }

@@ -18,10 +18,13 @@ services:
     image: vue-frontend
     container_name: vue-frontend
     restart: always
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     depends_on:
-      - backend
+      - backend # This line was indented one level too far in the original snippet, fixed here.
+    # The command below was for debugging environment variables. Comment it out or remove it for normal operation.
     environment:
       VITE_API_URL: "http://backend:8000"
       HOST: "0.0.0.0"
@@ -30,5 +33,5 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-
+    # command: /bin/sh -c "echo '>>> VUE_APP_CESIUM_TOKEN inside container is '$VUE_APP_CESIUM_TOKEN && echo '>>> NODE_ENV inside container is '$NODE_ENV && sleep 3600"
     command: npm run dev
