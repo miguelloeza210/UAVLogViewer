@@ -13,9 +13,6 @@ class DuckDBManager:
             logger.error("duckdb_connection_failed_on_init", database_path=database_path, error=str(e), exc_info=True)
             self.connection = None
 
-    def __del__(self):
-        self.close_connection()
-
     def get_connection(self) -> duckdb.DuckDBPyConnection | None:
         return self.connection
 

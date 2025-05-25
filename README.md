@@ -25,7 +25,7 @@ cd UAVLogViewer
 # Create a .env file in the root directory of the UAVLogViewer project 
 # and add your API key and configuration.
 # (the same directory where docker-compose.yml is located)
-echo "GEMINI_MODEL_NAME=gemini-1.5-flash" >> .env
+echo "GEMINI_MODEL_NAME=gemini-2.0-flash-001" >> .env
 echo "GEMINI_API_KEY=<YOUR_ACTUAL_GEMINI_API_KEY>" >> .env
 echo "VUE_APP_API_URL=http://backend:8000" >> .env
 

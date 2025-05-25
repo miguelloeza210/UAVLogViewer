@@ -5,7 +5,7 @@ import structlog
 
 logger = structlog.get_logger()
 
-GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-pro")
 
 class GeminiClient:
     """
